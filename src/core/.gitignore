@@ -1,0 +1,5 @@
+*.d
+*.leg.c
+*.o
+malachite
+.DS_Store

@@ -1,0 +1,48 @@
+%{
+/* Include things here */
+#include "parser.h"
+
+/* Debugging */
+#include <stdio.h>
+
+#define YY_CTX_LOCAL
+#define YY_CTX_MEMBERS                  \
+    /* Current line number */           \
+    int lineno;                         \
+                                        \
+    /* Input to the current parse */    \
+    char *input, *input_end;
+
+#define YY_INPUT(yy, buf, result, max_size)                 \
+{                                                           \
+    int remaining = yy->input_end - yy->input;              \
+    result = max_size > remaining ? remaining : max_size;   \
+    if( 0 != result ) {                                     \
+        memcpy(buf, yy->input, result);                     \
+        yy->input += result;                                \
+    }                                                       \
+}
+
+%}
+
+Root        = s:Statements EOF
+Statements  = SEP*
+              - head:Statement              { printf("head statement\n"); }
+              ( SEP - tail:Statement        { printf("tail statement\n"); }
+              )* SEP?
+            | SEP+
+Statement   = Assign
+            | Value
+
+Assign = name:ID - '=' - val:Statement
+Value  = v:NUMBER
+
+NUMBER  = < [0-9]+ >            { printf("number: %s\n", yytext); }
+NAME    = [a-zA-Z0-9_]+
+ID      = < NAME >              { printf("id: %s\n", yytext); }
+SPACE   = [ ]+
+EOL     = ( '\n' | '\r\n' | '\r' )        { yy->lineno++ }
+EOF     = !.
+-       = [ \t]*
+
+SEP     = ( - (EOL | ';') )+
